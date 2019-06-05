@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*- 
-import ast
 import base64
 import json
 import os
@@ -32,6 +31,13 @@ class ChromiumBased(ModuleInfo):
             if os.path.exists(profiles_path):
                 # List all users profile (empty string means current dir, without a profile)
                 profiles = {'Default', ''}
+
+                # Automatic join all other additional profiles
+                for dirs in os.listdir(path):
+                    dirs_path = os.path.join(path, dirs)
+                    if (os.path.isdir(dirs_path) == True) and (dirs.startswith('Profile')):
+                        profiles.extend(dirs)
+
                 with open(profiles_path) as f:
                     try:
                         data = json.load(f)
@@ -39,6 +45,7 @@ class ChromiumBased(ModuleInfo):
                         profiles |= set(data['profile']['info_cache'])
                     except Exception:
                         pass
+
                 # Each profile has its own password database
                 for profile in profiles:
                     # Some browsers use names other than "Login Data"
@@ -90,7 +97,11 @@ class ChromiumBased(ModuleInfo):
                 # Yandex passwords use a masterkey stored on windows credential manager
                 # https://yandex.com/support/browser-passwords-crypto/without-master.html
                 if is_yandex and yandex_enckey:
-                    p = ast.literal_eval(str(password))
+                    try:
+                        p = json.loads(str(password))
+                    except Exception:
+                        p = json.loads(password)
+
                     password = base64.b64decode(p['p'])
 
                     # Passwords are stored using AES-256-GCM algorithm
@@ -101,7 +112,8 @@ class ChromiumBased(ModuleInfo):
                     # Failed...
                 else:
                     # Decrypt the Password
-                    password = Win32CryptUnprotectData(password, is_current_user=constant.is_current_user, user_dpapi=constant.user_dpapi)
+                    password = Win32CryptUnprotectData(password, is_current_user=constant.is_current_user,
+                                                       user_dpapi=constant.user_dpapi)
 
                 if not url and not login and not password:
                     continue

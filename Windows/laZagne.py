@@ -211,11 +211,6 @@ if __name__ == '__main__':
     args = dict(parser.parse_args()._get_kwargs())
     arguments = parser.parse_args()
 
-    quiet_mode(is_quiet_mode=args['quiet'])
-
-    # Print the title
-    constant.st.first_title()
-
     # Define constant variables
     output(
         output_dir=args['output'],
@@ -225,6 +220,10 @@ if __name__ == '__main__':
     )
     verbosity(verbose=args['verbose'])
     manage_advanced_options(user_password=args.get('password', None))
+    quiet_mode(is_quiet_mode=args['quiet'])
+
+    # Print the title
+    constant.st.first_title()
 
     start_time = time.time()
 

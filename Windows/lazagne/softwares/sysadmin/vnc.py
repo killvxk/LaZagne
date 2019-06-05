@@ -1,6 +1,7 @@
 # Code based on vncpasswd.py by trinitronx
 # https://github.com/trinitronx/vncpasswd.py
 import binascii
+import codecs
 import traceback
 
 try:
@@ -23,18 +24,18 @@ class Vnc(ModuleInfo):
 
     def do_crypt(self, password, decrypt):
         passpadd = (password + '\x00' * 8)[:8]
-        strkey = ''.join([chr(x) for x in self.vnckey])
+        strkey = b''.join([chr_or_byte(x) for x in int(self.vnckey)])
         key = d.deskey(strkey, decrypt)
         crypted = d.desfunc(passpadd, key)
         return crypted
 
     def unhex(self, s):
         try:
-            s = s.decode('hex')
+            s = codecs.decode(s, 'hex')
         except TypeError as e:
             if e.message == 'Odd-length string':
                 self.debug('%s . Chopping last char off... "%s"' % (e.message, s[:-1]))
-                s = s[:-1].decode('hex')
+                s = codecs.decode(s[:-1], 'hex')
             else:
                 return False
         return s
@@ -46,13 +47,13 @@ class Vnc(ModuleInfo):
             # If the hex encoded passwd length is longer than 16 hex chars and divisible
             # by 16, then we chop the passwd into blocks of 64 bits (16 hex chars)
             # (1 hex char = 4 binary bits = 1 nibble)
-            hexpasswd = encpasswd.encode('hex')
+            hexpasswd = codecs.encode(encpasswd, 'hex')
             if len(hexpasswd) > 16 and (len(hexpasswd) % 16) == 0:
-                splitstr = self.split_len(hash.encode('hex'), 16)
+                splitstr = self.split_len(codecs.encode(hash, 'hex'), 16)
                 cryptedblocks = []
                 for sblock in splitstr:
-                    cryptedblocks.append(self.do_crypt(sblock.decode('hex'), True))
-                    pwd = ''.join(cryptedblocks)
+                    cryptedblocks.append(self.do_crypt(codecs.decode(sblock, 'hex'), True))
+                    pwd = b''.join(cryptedblocks)
             elif len(hexpasswd) <= 16:
                 pwd = self.do_crypt(encpasswd, True)
             else:

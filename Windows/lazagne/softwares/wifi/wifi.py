@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 import os
 import sys
 import traceback
@@ -36,7 +36,7 @@ class Wifi(ModuleInfo):
                         stdout=PIPE,
                         stderr=PIPE)
         stdout, stderr = process.communicate()
-        for st in stdout.split('\n'):
+        for st in stdout.decode().split('\n'):
             if any(i in st.lower() for i in language_keys):
                 password = st.split(':')[1].strip()
                 return password
@@ -91,7 +91,7 @@ class Wifi(ModuleInfo):
                                             self.error(traceback.format_exc())
                                             values['INFO'] = '[!] Password not found.'
 
-                                if values and values['Authentication'] != 'open':
+                                if values and values.get('Authentication') != 'open':
                                     pwd_found.append(values)
 
                 constant.wifi_password = True
